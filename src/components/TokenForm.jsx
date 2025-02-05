@@ -6,6 +6,7 @@ export function TokenForm({ onSubmit, isConnected }) {
   const [symbol, setSymbol] = useState('');
   const [totalSupply, setTotalSupply] = useState('');
   const [error, setError] = useState('');
+  const [network, setNetwork] = useState('sepolia');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,6 +78,21 @@ export function TokenForm({ onSubmit, isConnected }) {
           className="mt-1 block w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder="1000000"
         />
+      </div>
+
+      <div>
+        <label htmlFor="network" className="block text-sm font-medium text-gray-700">
+          Network
+        </label>
+        <select
+          id="network"
+          value={network}
+          onChange={(e) => setNetwork(e.target.value)}
+          className="mt-1 block w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <option value="mainnet">Sepolia</option>
+          <option value="holesky">Holesky</option>
+        </select>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
