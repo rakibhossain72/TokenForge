@@ -14,7 +14,7 @@ module.exports = {
   },
   networks: {
     sepolia: {
-      url: "https://rpc.sepolia.ethpandaops.io",
+      url: "https://eth-sepolia.public.blastapi.io",
       accounts: [process.env.PRIVATE_KEY]
     },
     holesky: {
