@@ -1,69 +1,138 @@
-import React, { useState } from 'react';
-import { ethers } from 'ethers';
-import { Navbar } from './components/Navbar';
-import { TokenForm } from './components/TokenForm';
-import { Footer } from './components/Footer';
+import React, { useState, useEffect } from "react";
+import { Navbar } from "./components/Navbar";
+import { TokenForm } from "./components/TokenForm";
+import { Footer } from "./components/Footer";
+import { connectWallet, createToken } from "./utils/web3";
+import { Model as ModalComp } from "./components/Model";
 
 function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState(null);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [tokenAddress, setTokenAddress] = useState(null);
+  const [model, setModel] = useState({
+    isOpen: false,
+    message: "",
+    status: "",
+    txHash: "",
+  });
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum === 'undefined') {
-      alert('Please install MetaMask to use this application');
-      return;
+  const closeModal = () => {
+    setModel({
+      isOpen: false,
+      message: "",
+    });
+  };
+
+  useEffect(() => {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        console.log("Accounts changed:", accounts);
+        if (accounts.length > 0) {
+          setIsConnected(true);
+          setAddress(accounts[0]);
+        } else {
+          setIsConnected(false);
+          setAddress(null);
+        }
+      });
     }
+  }, []);
 
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send('eth_requestAccounts', []);
-      setAddress(accounts[0]);
+  const handleConnect = async () => {
+    const wallet = await connectWallet();
+    if (wallet) {
       setIsConnected(true);
-    } catch (err) {
-      console.error('Failed to connect wallet:', err);
+      setAddress(wallet.account);
     }
   };
 
   const handleCreateToken = async (tokenData) => {
-    if (!window.ethereum) {
-      throw new Error('MetaMask is not installed');
+    if (!isConnected) {
+      setModel({
+        isOpen: true,
+        message: "Please connect your wallet first",
+        status: "error",
+      });
     }
-
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      
-      // Here you would typically:
-      // 1. Deploy the ERC-20 contract
-      // 2. Handle the transaction
-      // 3. Wait for confirmation
-      
-      // For demo purposes, we'll just show a success message
-      setTokenAddress('0x1234...5678');
-      setShowSuccess(true);
-    } catch (err) {
-      console.error('Failed to create token:', err);
-      throw err;
+      setModel({
+        isOpen: true,
+        message: "Token creation in progress...",
+        status: "loading",
+      });
+      const tx = await createToken(
+        tokenData.name,
+        tokenData.symbol,
+        tokenData.totalSupply
+      );
+
+
+      await tx.wait();
+
+      if (tx) {
+        setModel({
+          isOpen: true,
+          message: "Token created successfully",
+          status: "success",
+          txHash: tx.hash,
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error("Transaction Error:", error);
+
+      let errorMessage = "An error occurred";
+
+      if (error.code === "ACTION_REJECTED") {
+        errorMessage = "User denied the transaction";
+      } else if (error.code === -32603) {
+        errorMessage = "Internal JSON-RPC error";
+      } else if (error.code === -32000) {
+        errorMessage = "Insufficient funds for gas";
+      } else if (error.message?.includes("insufficient funds")) {
+        errorMessage = "Not enough ETH for gas fees";
+      } else if (error.message?.includes("nonce too low")) {
+        errorMessage = "Nonce too low. Try increasing gas fees";
+      } else if (
+        error.message?.includes("replacement transaction underpriced")
+      ) {
+        errorMessage = "Gas price too low for replacement transaction";
+      } else if (error.code === -32602) {
+        errorMessage = "Invalid parameters sent to RPC";
+      } else if (error.message?.includes("execution reverted")) {
+        errorMessage =
+          "Transaction execution reverted. Check contract conditions.";
+      }
+
+      setModel({
+        isOpen: true,
+        message: errorMessage,
+        status: "error",
+      });
+
+      return false;
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <Navbar isConnected={isConnected} address={address} onConnect={connectWallet} />
-      
+      <Navbar
+        isConnected={isConnected}
+        address={address}
+        onConnect={handleConnect}
+      />
+
       <main className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl">
-              Create Your Own{' '}
+              Create Your Own{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
                 ERC-20 Token
               </span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Enter the details of your token, and let us deploy it on the blockchain!
+              Enter the details of your token, and let us deploy it on the
+              blockchain!
             </p>
           </div>
 
@@ -71,22 +140,13 @@ function App() {
             <TokenForm onSubmit={handleCreateToken} isConnected={isConnected} />
           </div>
 
-          {showSuccess && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                <h3 className="text-lg font-medium text-gray-900">Token Created Successfully!</h3>
-                <p className="mt-2 text-sm text-gray-500">
-                  Your token has been deployed to: {tokenAddress}
-                </p>
-                <button
-                  onClick={() => setShowSuccess(false)}
-                  className="mt-4 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          )}
+          <ModalComp
+            isOpen={model.isOpen}
+            onClose={closeModal}
+            message={model.message}
+            status={model.status}
+            txHash={model.txHash}
+          />
         </div>
       </main>
 

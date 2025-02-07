@@ -1,31 +1,35 @@
-import React, { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { useState } from "react";
+import { AlertCircle } from "lucide-react";
 
 export function TokenForm({ onSubmit, isConnected }) {
-  const [name, setName] = useState('');
-  const [symbol, setSymbol] = useState('');
-  const [totalSupply, setTotalSupply] = useState('');
-  const [error, setError] = useState('');
-  const [network, setNetwork] = useState('sepolia');
+  const [name, setName] = useState("");
+  const [symbol, setSymbol] = useState("");
+  const [totalSupply, setTotalSupply] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!isConnected) {
-      setError('Please connect your wallet first');
+      setError("Please connect your wallet first");
       return;
     }
 
     if (!name || !symbol || !totalSupply) {
-      setError('All fields are required');
+      setError("All fields are required");
       return;
     }
 
     try {
-      await onSubmit({ name, symbol, totalSupply });
+      const result = await onSubmit({ name, symbol, totalSupply });
+      if (result) {
+        setName("");
+        setSymbol("");
+        setTotalSupply("");
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
 
@@ -37,9 +41,12 @@ export function TokenForm({ onSubmit, isConnected }) {
           <span className="text-red-700">{error}</span>
         </div>
       )}
-      
+
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-700"
+        >
           Token Name
         </label>
         <input
@@ -53,7 +60,10 @@ export function TokenForm({ onSubmit, isConnected }) {
       </div>
 
       <div>
-        <label htmlFor="symbol" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="symbol"
+          className="block text-sm font-medium text-gray-700"
+        >
           Token Symbol
         </label>
         <input
@@ -67,37 +77,33 @@ export function TokenForm({ onSubmit, isConnected }) {
       </div>
 
       <div>
-        <label htmlFor="totalSupply" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="totalSupply"
+          className="block text-sm font-medium text-gray-700"
+        >
           Total Supply
         </label>
         <input
           type="number"
           id="totalSupply"
           value={totalSupply}
-          onChange={(e) => setTotalSupply(e.target.value)}
+          onChange={(e) => {
+            const value = Math.max(0, e.target.value); // Ensure the value is not negative
+            setTotalSupply(value);
+          }}
+          min="0" // Set the minimum value to 0
           className="mt-1 block w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder="1000000"
+          style={{
+            appearance: "textfield", // Hide the increment/decrement arrows in most browsers
+            MozAppearance: "textfield", // Hide the increment/decrement arrows in Firefox
+          }}
         />
-      </div>
-
-      <div>
-        <label htmlFor="network" className="block text-sm font-medium text-gray-700">
-          Network
-        </label>
-        <select
-          id="network"
-          value={network}
-          onChange={(e) => setNetwork(e.target.value)}
-          className="mt-1 block w-full px-4 py-3 bg-white/50 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-        >
-          <option value="mainnet">Sepolia</option>
-          <option value="holesky">Holesky</option>
-        </select>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-700">
-          A fee of 0.01 ETH will be charged for token creation
+          A fee of 0.001 Celo will be charged for token creation
         </p>
       </div>
 

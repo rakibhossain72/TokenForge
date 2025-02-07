@@ -20,6 +20,10 @@ module.exports = {
     holesky: {
       url: "https://1rpc.io/holesky",
       accounts: [process.env.PRIVATE_KEY]
+    },
+    celo: {
+      url: "https://alfajores-forno.celo-testnet.org",
+      accounts: [process.env.PRIVATE_KEY]
     }
   },
   etherscan: {
