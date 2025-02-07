@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { abi as ContractABI } from "../../artifacts/contracts/TokenFactory.sol/TokenFactory.json"; // Import contract ABI
+import { abi as ContractABI } from "./TokenFactory.json"; // Import contract ABI
 
 const FACTORY_ADDRESS = "0xc84da668d8018384b72C679C5e96a29713a9A9d9";
 
