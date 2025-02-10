@@ -32,7 +32,7 @@ export function Footer() {
             <ul className="mt-4 space-y-4">
               <li>
                 <a
-                  href="https://github.com/rakibmia7254"
+                  href="https://github.com/rakibhossain72"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center text-base text-gray-500 hover:text-gray-900"
