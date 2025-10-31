@@ -101,12 +101,6 @@ export function TokenForm({ onSubmit, isConnected }) {
         />
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-700">
-          A fee of 0.001 Celo will be charged for token creation
-        </p>
-      </div>
-
       <button
         type="submit"
         className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"

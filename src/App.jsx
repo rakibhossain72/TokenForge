@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ethers } from "ethers";
 import { Navbar } from "./components/Navbar";
 import { TokenForm } from "./components/TokenForm";
 import { Footer } from "./components/Footer";
@@ -8,6 +9,7 @@ import { Model as ModalComp } from "./components/Model";
 function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState(null);
+  const [networkInfo, setNetworkInfo] = useState(null);
   const [model, setModel] = useState({
     isOpen: false,
     message: "",
@@ -29,20 +31,64 @@ function App() {
         if (accounts.length > 0) {
           setIsConnected(true);
           setAddress(accounts[0]);
+          // Get network info when account changes
+          getNetworkInfo();
         } else {
           setIsConnected(false);
           setAddress(null);
+          setNetworkInfo(null);
         }
+      });
+
+      window.ethereum.on("chainChanged", (chainId) => {
+        console.log("Chain changed:", chainId);
+        // Get updated network info when chain changes
+        getNetworkInfo();
       });
     }
   }, []);
+
+  const getNetworkInfo = async () => {
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const network = await provider.getNetwork();
+        setNetworkInfo({
+          chainId: network.chainId,
+          name: network.name,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to get network info:", error);
+    }
+  };
 
   const handleConnect = async () => {
     const wallet = await connectWallet();
     if (wallet) {
       setIsConnected(true);
       setAddress(wallet.account);
+      setNetworkInfo({
+        chainId: wallet.chainId,
+        name: getNetworkName(wallet.chainId),
+      });
     }
+  };
+
+  const getNetworkName = (chainId) => {
+    const networks = {
+      1n: "Ethereum Mainnet",
+      5n: "Goerli Testnet", 
+      11155111n: "Sepolia Testnet",
+      137n: "Polygon Mainnet",
+      80001n: "Mumbai Testnet",
+      56n: "BSC Mainnet",
+      97n: "BSC Testnet",
+      42220n: "Celo Mainnet",
+      44787n: "Celo Alfajores Testnet",
+      1337n: "Localhost",
+    };
+    return networks[chainId] || `Chain ID: ${chainId.toString()}`;
   };
 
   const handleCreateToken = async (tokenData) => {
@@ -52,6 +98,7 @@ function App() {
         message: "Please connect your wallet first",
         status: "error",
       });
+      return false;
     }
     try {
       setModel({
@@ -118,6 +165,7 @@ function App() {
       <Navbar
         isConnected={isConnected}
         address={address}
+        networkInfo={networkInfo}
         onConnect={handleConnect}
       />
 
